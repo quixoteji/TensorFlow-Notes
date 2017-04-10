@@ -3,5 +3,5 @@
 ***Personal TensorFlow Learning Notes***
 
 **File Directory**
-> /Notes
-> /Examples
+> - Notes
+> - Examples
