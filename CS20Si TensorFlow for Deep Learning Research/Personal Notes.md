@@ -281,7 +281,36 @@ Intuition: if the difference between the predicted value and the real value is s
 
 If it's large, take its absolute value
 
+# Lecture 4 Structure your model
 
+## Agenda
+- Overall structure of a model in TensorFlow
+- word2vec
+- Name scope
+- Embedding visualization
+
+### Phrase 1: Assemble graph
+1. Define placeholders for input and output
+2. Define the weights
+3. Define the inference model
+4. Define loss function
+5. Define optimizer
+
+### Phrase 2: Compute
+
+## Word Embedding
+*Capture the semantic relationships between words*
+
+### Embedding Lookup
+tf.nn.embedding_lookup(params, ids, partition_strategy='mod', name=None, validate_indices=True, max_norm=None)
+
+### NCE Loss
+tf.nn.nce_loss(weights, biases, labels, inputs, num_sampled, num_classes, ...)
+
+## Name scope
+*Group nodes together*
+
+with tf.name_scope(name)
 
 
 
