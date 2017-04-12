@@ -40,6 +40,7 @@ and so on
 **tf.Graph()**: to add operators to a graph, set it as default
 
 '''python
+
 g = tf.Graph()
 with g.as_default():
 	x = tf.add(3,5)
@@ -47,6 +48,7 @@ with g.as_default():
 sess = tf.Session(graph=g)
 with tf.Session as sess:
 	sess.run(x)
+	
 '''
 
 ## Why graphs
