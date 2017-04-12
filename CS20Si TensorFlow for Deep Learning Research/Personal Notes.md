@@ -62,10 +62,178 @@ with tf.Session as sess:
 ## Agenda
 - Basic operation
 - Tensor types
-- Project speed dating
 - Placeholders and feeding inputs
 - Lazy loading
 
 ## TensorBoard
+### Codes
+writer = tf.summary.FileWriter("./graphs", sess.graph)
+
+with tf.Session() as sess:
+### Run it
+$ python [program].py
+
+$ tensorboard --logdir="./graphs" --port 6006
+
+### Open browser and go to: http://localhost:6006/
+
+## tf.constant
+tf.constant(value, dtype=None, shape=None, name='Const', verify_shape=False)
+
+tf.zeros(shape, dtype=tf.float32, name=None)
+*creates a tensor of shape and all elements will be zeros(when ran in session)*
+
+tf.zeros_like(input_tensor, dtype=None, name=None, optimize=True)
+*creates a tensor of shape and type(unless type is specified) as the input_tensor but all elements are zeros*
+
+tf.ones(shape, dtype=tf.float32, name=None)
+tf.ones_like(input_tensor, dtype=None, name=None, optimize=True)
+
+tf.fill(dims, value, name=None)
+*creats a tensor filled with a scalar value*
+
+### Constant as sequences
+tf.linspace(start, stop, num, name=None)
+tf.range(start, limit=None, delta=1, dtype=None, name='range')
+**Tensor objects are not iterable**
+
+### Randomly Generated Constants
+tf.random_normal(shape, mean=0.0, stddev=1.0, dtype=tf.float32, seed=None, name=None)
+
+tf.truncated_normal(shape, mean=0.0, stddev=1.0, dtype=tf.float32, seed=None, name=None)
+
+tf.random_uniform(shape, minval=0, maxval=None, dtype=tf.float32, seed=None, name=None)
+
+tf.random_shuffle(value, seed=None, name=None)
+
+tf.random_crop(value, size, seed=None, name=None)
+
+tf.multinomial(logits, num_samples, seed=None, name=None)
+
+tf.random_gamma(shape, alpha, beta=None, dtype=tf.float32, seed=None, name=None)
+
+**tf.set_random_seed(seed)**
+
+## Operations
+
+tf.add()
+
+tf.add_n()
+
+tf.mul()
+
+tf.matmul()
+
+tf.div()
+
+tf.mod()
+
+##TensorFlow Data Types
+
+- **TensorFlow integrates seamlessly with NumPy**
+- **Can pass numpy types to TensorFlow ops**
+- **For tf.Session.run(fetches)**: if the requested fetch is a Tensor, then the output of will be a NumPy ndarray
+- **Do not use Python native types for tensors because TensorFlow has to infer Python type**
+- **Beware when using NumPy arrays because NumPy and TensorFlow might become not so compatible in the future**
+- **Do not use constants, constants are stored in the graph definition**:
+***This makes loading graphs expensive when constants are big, only use constants for primitive types. Use variables or readers for more data that requires more memory.***
+
+## Variables
+**tf.Variables()**
+
+- The easiest way is initializing all variables at once:
+
+>init = tf.global_variables_initializer()
+>
+>with tf.Session() as sess:
+>
+>sess.run(init)
+
+- Initialize only a subset of variables:
+
+>init_ab = tf.variable_initializer([a, b], name="init_ab")
+>
+>with tf.Session as sess:
+>
+>sess.run(init_ab)
+
+- Initialize a single variable
+
+>W = tf.Variable(tf.zeros[784, 10])
+>
+>with tf.Session as sess:
+>
+>sess.run(W.initializer)
+
+#### Eval()
+>W = tf.Variable(tf.truncated_normal([700, 10]))
+>
+>with tf.Session() as sess:
+>
+>sess.run(W.initializer)
+>
+>print(W.eval())
+
+#### tf.Variable.assign()
+>W = tf.Variable(10)
+>
+>W.assign(100)
+>
+>with tf.Session() as sess:
+>
+>sess.run(W.initializer)
+>
+>print(W.eval()) # >> 10 (W.assign(100) doesn't assign the value 100 to W. It creates an assign op, and that op needs to be run to take effect)
+
+---
+
+>W = tf.Variable(10)
+>
+>W.assign(100)
+>
+>with tf.Session() as sess:
+>
+>sess.run(assign_op)
+>
+>print(W.eval()) # >> 100 (You don't need to initialize variable because assign_op does it for you)
+
+## Session VS InteractiveSession
+*You sometimes see InteractiveSession instead of Session. The only difference is an InteractiveSession makes itself the default*
+
+## Control Dependencies
+
+**tf.Graph.control_dependencies(control_input)**: define which ops should be run first
+
+## Placehoders
+
+A TF program often has 2 phase:
+1. Assemble a graph
+2. Use a session to execute operations in the graph
+
+*why placeholders*
+We can later supply their own data when they need to execute the computation
+
+*tf.placeholder(dtype, shape=None, name=None)*
+
+### Feed the values to placeholders using a dictionary
+
+### Placeholders are valid ops
+
+### You can feed_dict any feedable tensor. Placeholder is just a way to indicate that something must be fed
+
+### tf.Graph.is_feedable(tensor)
+
+True if and only if tensor is feedable
+
+## Lazy Loading
+
+***Defer creating/initiablizing an object until it is needed***
+
+### Graph description
+**tf.get_default_graph().as_graph_def()**
+
+
+
+
 
 
