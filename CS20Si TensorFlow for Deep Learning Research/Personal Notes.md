@@ -312,5 +312,150 @@ tf.nn.nce_loss(weights, biases, labels, inputs, num_sampled, num_classes, ...)
 
 with tf.name_scope(name)
 
+# Lecture 5 Manage Experiments
+
+## Agenda
+- More word2vec
+- tf.train.Saver
+- tf.summary
+- Randomization
+- Data Readers
+
+**tf.gradients(y, [xs])**:
+Take derivative of y with respect to each tensor in the list [xs]
+
+## Manage experiments
+
+###**tf.train.Saver**:
+saves graph's variables in binary files
+
+#### Saves sessions, not graphs
+tf.train.Saver.save(sess, save_path, global_step=None, ...)
+**Only save variables, not graph**
+**Checkpoints map variable names to tensors**
+
+#### Save parameters after 1000 steps
+
+>_#define model
+>
+>_#create a saver object
+>
+>saver = tf.train.Saver()
+>
+>_#launch a session to compute the graph
+>
+>with tf.Session as sess
+>
+>_#actual training loop:
+>
+>for step in range(training_steps):
+>
+>sess.run([optimizer])
+>
+>if (step+1) % 1000==0:
+>
+>saver.save(sess, 'checkpoints_directory/model_name', global_step=model.global_step)
+
+#### Each saved step is a checkpoint
+**Global step**
+*Common in TensorFlow*
+self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
+*Need to tell optimizer to increment global step*
+self.optimizer = tf.train.GradientDescentOptimizer(self.lr).minimize(self.loss, global_step=self.global_step)
+
+#### Restore variables
+saver.restore(sess, 'checkpoints/name_of_the_checkpoints')
+
+e.g. saver.restore(sess, 'checkpoints/skip-gram-99999')
+
+#### Restore the latest checkpoint
+
+ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/checkpoint'))
+
+if ckpt and ckpt.model_checkpoint_path:
+	saver.restore(sess, ckpt.model_checkpoint_path)
+	
+- *checkpoint keeps track of the latest checkpoint*
+- *Safeguard to restore checkpoints only when there are checkpoints*
+
+### **tf.summary**
+
+*Visualize our summary statistics during our training*
+
+- tf.summary.scalar
+- tf.summary.histogram
+- tf.summary.image
+
+#### Step 1: create summaries
+
+>with tf.name_scope("summaries"):
+>	
+>__	tf.summary.scalar("loss", self.loss)
+>
+>__tf.summary.scalar("accuracy", self.accuracy)
+>
+>__tf.summary.histogram("histogram loss", self.loss)
+>
+>_# merge them all
+>
+>__self.summary_op = tf.summary.merge_all()
+
+#### Step 2: rum them
+
+>loss_batch, _, summary = sess.run([model.loss, model.optimizer, model.summary_op], feed_dict=feed_dict)
+
+*Like everything else in TF, summaries are ops*
+
+#### Step 3: write summaries to file
+
+>writer.add_summary(summary, global_step=step)
+
+### Control Randomization
+
+#### Op level random seed
+>my_var = tf.Variable(tf.truncated_normal((-1.0, 1.0),stddev=0.1, seed=0))
+
+#### Sessions keep track of random state
+#### Graph level seed
+>tf.set_random_seed(seed)
+
+## Data Readers
+### Problem with feed_dict
+- Slow when client and workers are on different machines
+- Readers allow us to load data directly into the worker process
+
+### Different Readers for different file types
+
+**tf.TextLineReader**: Outputs the lines of a file delimited by newlines(text files, CSV files)
+
+**tf.FixedLengthRecordReader**: Outputs the entire file when all files have same fixed lengths(each MNIST has 28 * 28 pixels, CIFAR-10 32 * 32 * 3)
+
+**tf.WholeFileReader**:
+Outputs the entire file content
+
+**tf.TFRecordReader**:
+Reads samples from TensorFlow's own binary format(TFRecord)
+
+**tf.ReaderBase**:
+To allow you to create your own readers
+
+### Read in files from queues
+>filename_queue = tf.train.string_input_producer(["file0.csv", "file1.csv"])
+>
+>reader = tf.TextLineReader()
+>
+>key, value = reader.read(filename_queue)
+
+### Threads & Queues
+**You can use tf.Coordinator and tf.QueueRunner to manage your queues**
+
+>with tf.Session() as sess:
+>
+>__#start populating the filename queue
+>
+>__coord = tf.train.Coordinator()
+>
+>__threads = tf.train.start_queue_runner(coord=coord)
+
 
 
