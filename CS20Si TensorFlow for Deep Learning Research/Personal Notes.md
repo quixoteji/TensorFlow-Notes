@@ -232,6 +232,54 @@ True if and only if tensor is feedable
 ### Graph description
 **tf.get_default_graph().as_graph_def()**
 
+# Lecture 3 Basic Models in TensorFlow
+
+## Agenda
+- Review
+- Linear regression in TensorFlow
+- Optimizers
+- Logistic regression on MNIST
+- Loss function
+
+## Linear Regression
+
+- Phase 1: Assemble our graph
+	- Step 1: Read in data
+	- Step 2: Create placeholders for input and labels (X,Y)
+	- Step 3: Create weight and bias (w, b)
+	- Step 4: Build model to predict Y
+	- Step 5: Specify loss function
+	- Step 6: Create optimizer
+- Phase 2: Train our model
+	- Initialize variables
+	- Run optimizer op(with data fed into placeholders for inputs and labels)
+- See model in TensorBoard
+	- Step 1: writer = tf.summary.FileWriter('./graph', sess.graph)
+	- Step 2: $ tensorboard --logdir='./graph'
+
+
+## Optimizer
+
+*Session looks at all **trainable** variables that optimizer depends on and update them*
+
+### List of optimizers in TF
+
+- tf.train.GradientDescentOptimizers
+- tf.train.AdagradOptimizer
+- tf.train.MomentumOptimizer
+- tf.train.AdamOptimizer
+- tf.train.ProximalGradientDescentOptimizer
+- tf.train.ProximalAdagradOptimizer
+- tf.train.RMSPropOptimizer
+- And more
+
+## Huber loss
+
+Robust to outliers
+
+Intuition: if the difference between the predicted value and the real value is small, square it
+
+If it's large, take its absolute value
 
 
 
