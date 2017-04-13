@@ -457,5 +457,76 @@ To allow you to create your own readers
 >
 >__threads = tf.train.start_queue_runner(coord=coord)
 
+# Lecture 6 Convolutional Neural Networks + Neural Style Transfer
 
+## Outline
+- Convolutional Neural Networks
+	- Convolution
+	- Pooling
+	- Feature Visualization
+- Neural Style Transfer
+	- Feature Inversion
+	- Texture Synthesis
+	- Style Transfer
+
+## Convolutional Neural Networks: Deep Learning with Images
+
+- Object Detection = What and Where
+- Object segmentation
+- Pose Estimation
+- Image Captioning
+- Dense Image Captioning
+- Visual Question Answering
+- Image Super-Resolution  
+- Generating Art
+
+## What is a Convolutional Neural Net
+- Fully-Connected Neural Network
+- Convolutional Neural Network
+	- Convolution layer
+	- Pooling layer
+		- makes the representations smaller and more manageable
+		- operates over each activation map independently
+
+### Case Study
+- LeNet-5
+- AlexNet
+- VGGNet
+- GoogLeNet
+- ResNet
+
+## Visualizing ConvNet Features
+1. Feed image into net
+2. Set gradient of chosen layer to all zero, except 1 for the chosen neuron
+3. Backprop to image
+
+### Gradient Ascent
+
+## Feature Inversion
+Given a feature vector for an image, find a new image such that:
+- Its features are similar to the given features
+- It "looks natural"(image prior regularization)
+
+## (Neural) Texture Synthesis
+Given a sample patch of some texture, can we generate a bigger image of the same texture?
+
+### Neural Texture Synthesis
+1. Pretrain a CNN on ImageNet(VGG-19)
+2. Run input texture forward through CNN, record activations on every layer; layer i gives feature map of shape C * H * W
+3. At each layer compute the Gram matrix giving outer product of features
+4. Initialize generated image from random noise
+5. Pass generated image through CNN, compute Gram matrix on each layer
+6. Compute loss: weighted sum of L2 distance between Gram matrix
+7. Backprop to get gradient on image
+8. Make gradient step on image
+9. GOTO 5 	
+
+## Style Transfer: Feature Inversion + Texture Synthesis
+
+### Neural Style Transfer: Feature + Gram Reconstruction
+
+### Neural Style Transfer
+Given a **content image** and a **style image**, find a new image that:
+- Matches the CNN features of the content image(feature reconstruction)
+- Matched the Gram matrices of the style image(texture synthesis)
 
