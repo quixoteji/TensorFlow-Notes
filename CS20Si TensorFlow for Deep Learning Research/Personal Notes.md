@@ -742,7 +742,69 @@ TensorFlow's binary file format: a serialized tf.train.Example protobuf object
 - faster to move around
 - can store data of different types (so you can put both images and labels in one place)
 
+---
 
+# Lecture 11 RNNs in TensorFlow
+
+## Agenda
+- All about RNNs
+- Implementation tricks & treats
+- Live demo of Language Modeling
+
+## RNNs
+### From feed-forward to RNNs
+- RNNs take advantage of sequential information of data(texts, genomes, spoken words, etc)
+- Directed cycles
+- All steps share weights to reduce the total number of parameters
+- Form the backbone of NLP
+- Can also be used for images
+### Simple Recurrent Neural Networks(sRNN)
+- In practice, RNNs aren't very good at capturing long-term dependencies
+
+### LSTM(Long Short Term Memory)
+- Control how much of new input to take, how much of the previous hidden state to forget
+- Closer to how humans precess information
+- The idea is not new
+
+### LSTMs VS GRUs
+- People find LSTMs work well, but unnecessarily complicated, so they introduced GRUs(Gated Recurrent Units)
+
+### GRUs(Gated Recurrent Unites)
+- Computationally less expensive
+- Performance on pair with LSTMs
+
+### What can RNNs do?
+#### Language Modeling
+- Allows us to measure how likely a sentence is important input for Machine Translation(since high-probability sentences are typically correct)
+- Can generate new text
+
+#### Character-level Language Modeling
+#### Machine Translation
+#### Text Summarization
+#### Image Captioning
+
+## RNNs in TensorFlow
+
+### Cell Support(**tf.nn.rnn_cell**)
+- BasicRNNCell: The most basic RNN cell
+- RNNCell: Abstract object representing an RNN cell
+- BasicLSTMCell: Basic LSTM recurrent network cell
+- LSTMCell: LSTM recurrent network cell
+- GRUCell: Gated Recurrent Unit cell
+
+### Construct Cells(**tf.nn.rnn_cell**)
+cell = tf.nn.rnn_cell.GRUCell(hidden_size)
+
+### Stack multiple cells
+cell = tf.nn.rnn_cell.GRUCell(hidden_size)
+rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
+
+### Construct Recurrent Neural Network
+- **tf.nn.dynamic_rnn**: uses a **tf.While** loop to dynamically construct the graph when it is executed. Graph creation is faster and you can feed batches of variable size.
+- **tf.nn.bidirectional_dynamic_rnn**: dynamic_rnn with bidirectional
+
+### Stack multiple cells
+cell = tf.nn.rnn_cell.GRUCell(hidden_size)
 
 
 
