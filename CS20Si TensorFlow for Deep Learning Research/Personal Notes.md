@@ -806,7 +806,119 @@ rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
 ### Stack multiple cells
 cell = tf.nn.rnn_cell.GRUCell(hidden_size)
 
+rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
 
+output, out_state = tf.nn.dynamic_rnn(cell, seq, **length**, initial_state)
 
+**Note**: most sequences are not of the same lenght
 
+### Dealing with variable sequence length
+- Pad all sequences with zero vectors and all labels with zero label(to make them of the same length)
+- Most current models can't deel with sequences of length layer than 120 tokens, so there is ussually a fixed max_length and we truncate the sequences to that max_length.
 
+#### Problem with Padded/truncated sequence length
+- The padded labels change the total loss, which affects the gradient
+- **Approach 1**
+	- Maintain a mask(True for real False for padded tokens)
+	- Run your model on both the real/padded tokens(model will predict labels for the padded tokens as well)
+	- Only take into account the loss caused by the real elements
+> full_loss = tf.nn.softmax_cross_entropy_with_logits(preds, labels)
+>
+> loss = tf.reduce_mean(tf.boolean_mask(full_loss, mask)) 
+
+- **Approach 2**
+	- Let your model know the real sequence length so it only predict the labels for the real tokens
+> cell = tf.nn.rnn_cell.GRUCell(hidden_size)
+>
+> rnn_cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
+>
+> **tf.reduce_sum(tf.reduce_max(tf.sign(seq), 2), 1)**
+> 
+> output, out_state = tf.nn.dynamic_rnn(cell, seq, length, initial_state)
+
+## How to deal with common problems whrn training RNNs
+
+### Vanishing Gradients
+- Use different activation units
+	- tf.nn.relu
+	- tf.nn.relu6
+	- tf.nn.crelu
+	- tf.nn.elu
+- In addition to:
+	- tf.nn.softplus
+	- tf.nn.softsign
+	- tf.nn.bias_add
+	- tf.sigmoid
+	- tf.tanh
+### Exploding Gradients
+**Clip gradients with tf.clip_by_global_norm**
+> gradients = tf.gradients(cost, tf.trainable_variables())
+> 
+> _# take gradients of cost w.r.t. all trainable variables
+> 
+> **clipped_gradients, _ = tf.clip_by_global_norm(gradients, ,ax_grad_norm)**
+> 
+> _#clip the gradients by pre-defined max norm
+> 
+> optimizer = tf.train.AdamOptimizer(learning_rate)
+> 
+> train_op = optimizer.apply_gradients(zip(gradients, trainables))
+> 
+> _#add the clipped gradients to the optimizer  
+ 
+### Anneal the learning rate
+**Optimizers accept both scalars and tensors as learning rate**
+>learning_rate = tf.train.exponential_decay(init_lr, global_step, decay_steps, decay_rate, staircase=True)
+>
+>optimizer = tf.train.AdamOptimizer(learning_rate)
+
+### Overfitting
+**Use dropout through tf.nn.dropout or DropoutWrapper for cells**
+- tf.nn.dropout
+> hidden_layer = tf.nn.dropout(hidden_size, keep_prob)
+- DropoutWrapper
+> cell = tf.nn.rrn_cell.GRUCell(hidden_size)
+> 
+> cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=keep_prob)
+
+## Language Modeling
+
+### Neural Language Modeling
+- Allows us to measure how likely a sentence is 
+- Important input for Machine Translation(since high-probability sentences are typically correct)
+- Can generate new text
+
+### Language Modeling: Main approaches
+- Word-level: n-grams
+- Character-level
+- Subword-level: somewhere in between the two above
+
+### Language Modeling: N-grams
+- The traditional approach up until very recently
+- Train a model to predict the next word based on previous n-grams
+- Huge vocabulary
+- Can't generalize to OOV(out of vocabulary)
+- Requires a lot of memory
+
+### Language Modeling: Character-level
+- Introduced in the early 2010s
+- Both input and output are characters
+#### Pros:
+- Very small vocabulary
+- 
+- Doesn't require word embeddings
+- Faster to train
+#### Cons:
+- Low fluency(many words can be gibberish)
+
+### Language Modeling: Hybrid
+- World-level by default, switching to character-level for unknown tokens
+
+#### Language Modeling: Subword-Level
+- Input and output are subwords
+- Keep W most frequent words
+- Keep S most frequent syllables
+- Split the rest into characters
+- Seem to perform bette than both word-level and character-level models
+
+---
