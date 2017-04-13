@@ -56,7 +56,7 @@ with tf.Session as sess:
 2. Break computation into small, differential pieces to facilitates auto-differentiation
 3. Facilitate distributed computation, spread the work across multiple CPUs, GPUs, or devices
 4. Many common machine learning models are commonly taught and visualized as directed graphs already
-
+---
 # Lecture 2 TensorFlow Ops
 
 ## Agenda
@@ -231,7 +231,7 @@ True if and only if tensor is feedable
 
 ### Graph description
 **tf.get_default_graph().as_graph_def()**
-
+---
 # Lecture 3 Basic Models in TensorFlow
 
 ## Agenda
@@ -280,7 +280,7 @@ Robust to outliers
 Intuition: if the difference between the predicted value and the real value is small, square it
 
 If it's large, take its absolute value
-
+---
 # Lecture 4 Structure your model
 
 ## Agenda
@@ -311,7 +311,7 @@ tf.nn.nce_loss(weights, biases, labels, inputs, num_sampled, num_classes, ...)
 *Group nodes together*
 
 with tf.name_scope(name)
-
+---
 # Lecture 5 Manage Experiments
 
 ## Agenda
@@ -456,7 +456,7 @@ To allow you to create your own readers
 >__coord = tf.train.Coordinator()
 >
 >__threads = tf.train.start_queue_runner(coord=coord)
-
+---
 # Lecture 6 Convolutional Neural Networks + Neural Style Transfer
 
 ## Outline
@@ -529,4 +529,222 @@ Given a sample patch of some texture, can we generate a bigger image of the same
 Given a **content image** and a **style image**, find a new image that:
 - Matches the CNN features of the content image(feature reconstruction)
 - Matched the Gram matrices of the style image(texture synthesis)
+
+# Lecture 7 Convnets in TensorFlow
+
+## Agenda
+- Playing with convolutions
+- Convolution support in TF
+- More MNIST
+- Autoencoder
+
+## Understanding convolutions
+- Convolutions in maths and physics
+- Convolutions in neural networks:
+	- a function derived from two given functions by *element-wise* *multiplication* that expresses how the *value and shape* of one is modified by the other
+	- we can use one single convolutional layer to modify a certain image
+	
+	- **tf.nn.conv2d(input, filter, strides, padding, use_cudnn_on_gpu=None, data_format=None, name=None)**
+
+- Convolutions without training
+	- blur
+	- sharpen
+	- edge
+	- top sobel
+	- emboss
+- Convolutions in neural networks:
+	- In traning, we don't specify kernels. We learn kernels.
+- **Getting dimensions right**
+	- **tf.nn.conv2d(input, filter, strides, padding, use_cudnn_on_gpu=None, data_format=None, name=None)**
+	- **Input**: Batch size * Height * Width * Channels
+	- **Filter**: Height * Width * Input Channels * Output Channels
+	- **Strides**: 4 element 1-D tensor, strides in each direction
+	- **Padding**: 'SAME' or 'VALID'
+	- **Data_format**: default to NHWC(Num_samples x Height x Width x Channels)  	
+
+## Convnet with MNIST
+### TensorFlow Support
+- Convolution: ***tf.nn.conv2d***
+- Relu: ***tf.nn.relu***
+- Maxpool: ***tf.nn.max_pool***
+- Fully connected: ***tf.nn.dense***
+- Softmax: ***tf.nn.softmax_cross_entropy_with_logits***
+
+### Variable scope
+>with tf.variable_scope('conv1') as scope:
+>
+>__w = tf.get_variable('weights', [5,5,1,32])
+>
+>__b = tf.get_variable('biases', [32], initializer=tf.random_normal_initializer())
+>
+>__conv = tf.nn.conv2d(images, w, strides=[1,1,1,1], padding='SAME')
+>
+>__conv1 = tf.nn.relu(conv + b, name=scope.name)
+
+## Autoencoder
+
+![Autoencoder](./1.png)
+
+- Input and Output dimensions should match
+- Input and Output range should be same
+
+---
+
+# Lecture 8 Guest Lecture([Jon Shlens](https://research.google.com/pubs/JonathonShlens.html))
+
+# Lecture 9 TensorFlow Input Pipeline
+
+## Agenda
+- **Data Records Revisited**
+- **TFRecord**
+- **Variable Initializer**
+- **Graph Collection**
+- **Style Transfer**
+
+## Queues
+- **tf.Session** objects are designed to multithreaded(can run ops in parallel)
+- Important TensorFlow objects for computing tensors **asychronously** in a graph
+	- Multiple threads prepare training examples and push them in the queue
+	- A traning thread executes a training op that dequeues mini-batches from the queue
+	- All threads must be able to stop together
+	- Exceptions must be caught and reported
+	- Queues must be properly closed when stopping
+- TensorFlow queues can't run without proper threading, but threading isn't exactly pleasant in Python  
+- **tf.Coordinator** and **tf.train.QueueRunner**
+	- **QueueRunner**: create a number of threads cooperating to enqueue tensors in the same queue
+	-  **Coordinator**: help multiple threads stop together and report exceptions to a program that waits for them to stop
+
+|Queue|What's it?|Ops supported|
+|-----|----------|-------------|
+|**tf.FIFOQueue**|Dequeues elements in first in first out orders|enqueue \enqueue_many \dequeue|
+|**tf.RandomShuffleQueue**|Dequeues elements in a random order|enqueue \enqueue_many \dequeue|
+|**tf.PaddingFIFOQueue**|FIFOQuue with padding to supports batching variable_size tensors|enqueue \enqueue_many \dequeue \dequeue_many|
+|**tf.PriorityQueue**|FIFOQueue whose enqueue and queue have another argument: priority|enqueue \enqueue_many \dequeue|
+
+***Create a queue***
+tf.FIFOQueue(capacity, min_after_dequeue, dtypes, shapes=None, name=None...)
+
+Same for other queue
+
+### Queue example
+>_#dummy data
+>
+>//In practice, you can use any op to read in your data
+>
+>all_data = 10 * np.random.randn(N_SAMPLE, 4) + 1
+>
+>all_target = np.random.randint(0, 2, size=N_SAMPLES)
+>
+>_#create queue
+>
+>_#dtypes specifies types of data and label
+>
+>_#shapes specifies shape of data and label
+>
+>queue = tf.FIFOQueue(capacity=50, dtype=[tf.float32, tf.int32], shapes=[[4], []])
+>
+>_#a common practice is to enqueue all data at once, but dequeue one by one
+>
+>enqueue_op = queue.enqueue_many([all_data, all_target])
+>
+>data_sample, label_sample = queue.dequeue()
+>
+>qr = tf.train.QueueRunner(queue, [enqueue_op] * NUM_THREADS)
+>
+>with tf.Session() as sess:
+>
+>_#create a coordinator, launch the queue runner threads
+>
+>__coord = tf.train.Coordinator()
+>
+>__enqueue_threads = qr.create_threads(sess, coord=coord, start=True)
+>
+>__for step in xrange(100): #do to 100 iteration
+>
+>____if coord.should_stop():
+>
+>______break
+>
+>____one_data, one_label = sess.run([data_sample, label_sample])
+>
+>__coord.request_stop()
+>
+>__coord.join(enqueue_threads)
+>
+
+### Dequeue multiple elements
+**tf.train.batch** or **tf.train.shuffle_batch** if you want to your batch to be shuffled
+
+### tf.Coordinator
+**tf.Coordinator**: can be used to manage the threads you created without queues
+
+>import threading
+>
+>_#thread body: loop until the coordinator indicates a stop was requested.
+>
+>_#if some condition becomes true, ask the coordinator to stop
+>
+>def my_loop(coord):
+>
+>__while not coord.should_stop():
+>
+>____...do something...
+>
+>__if ...some condition ...:
+>
+>____coord.request_stop()
+>
+>_# main code: create a coordinator
+>
+>coord = tf.Coordinator()
+>
+>_#create 10 threads that run 'my_loop()'
+>
+>_#you can also create threads using QueueRunner as example above
+>
+>threads = [threading.Thread(target=my_loop, args=(coord,)) for _ in xrange(10)]
+>
+>_#start the threads and wait for all of them to stop
+>
+>for t in threads: t.start()
+>
+>coord.join(threads)
+
+## Data Readers
+
+### Three ways to read in data
+1. Through tf.constant(make everything a constant)
+2. Feed dict: slow when client and workers are on different machines
+![Feed dict](./2.png)
+3. Data readers
+![Data readers](./3.png)
+
+### Different Readers for different file types
+- **tf.TextLineReader**: Outputs the lines of a file delimited by newlines
+- **tf.FixedLengthRecordReader**: Outputs the entire file when all files have same fixed length
+- **tf.WholeFileReader**: Outputs the entire file content
+- **tf.TFRecordReader**: Read samples from TensorFlow's own binary format(TFRecord)
+- **tf.ReaderBase**: To allow you to create your own readers
+
+### Read in files from queues
+
+## TFRecord
+
+TensorFlow's binary file format: a serialized tf.train.Example protobuf object
+
+### Using TFRecord
+- Convert normal files to TFRecord
+- Read in TFRecord
+
+
+### why binary
+- make better use of disk cache
+- faster to move around
+- can store data of different types (so you can put both images and labels in one place)
+
+
+
+
+
+
 
