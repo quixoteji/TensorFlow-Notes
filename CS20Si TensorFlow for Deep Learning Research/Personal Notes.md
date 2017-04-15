@@ -923,7 +923,7 @@ output, out_state = tf.nn.dynamic_rnn(cell, seq, **length**, initial_state)
 
 ---
 
-# Lecture 12 Convolutional GRU
+# Lecture 12 Convolutional GRU(Lessons Learned Building the Neural GPU)
 
 **Lessons Learned Building the Neural GPU**
 **What I learned building NNs to learn algorithm**
@@ -972,3 +972,87 @@ Algorithms are universal patterns, so if we can learn them, then in principle we
 - Example problem: **long multiplication**
 
 ## Nueral Computation
+
+### Recurrent Computation
+**Recurrent Neural Networks** share weights across time steps but use fixed-size memory vectors.
+
+*Time*: O(f(n))
+
+*Space*: O(1)
+
+### Neural Turing Machines
+**Neural Turing Machines** works with variable-size memory and so can do general computation, but are sequtial.
+
+*Time*: O(f(n))
+
+*Space*: O(g(n))
+
+## Arbitrary Size Ops
+
+**Neural Computation** requires operators that use a **fixed number of parameters** but operate on **memory of arbitrary size**. There are a few candidates:
+1. Attention(Neural Turing Machine)
+2. Stack, (De)Queue, Lsits
+3. ...other memory structure...
+4. Convolutoins
+
+### Attention mechanism
+### Why convolutions
+They act like a **neural GPU**
+- Attention is a softmax, effectively
+- Similarly a stack and other **task-specific** memory structures
+- Convolutions affect **all memory items in each step**
+- Convolutions are already implemented and **optimized**.
+- To train well we need to use LSTM-style gates: **CGRN** 
+
+## Neural GPU
+**Convolutional Gated Recurrent Networks(CGRNs)** perform many parallel operations in each step, akin to a **neural GPU** and in contrast to the sequential nature of Neural Turing Machines.
+
+The definition of a CGRN is also very **simple and elegant** 
+
+### CGRU definition
+### Computational Power:
+- Small number of parameters
+- Can simulate computation of **cellular automata**
+- With memory of size **n** can do **n local operations/step**
+- can do **long multiplication in O(n) steps**
+
+## Tricks of the Trade
+
+A number of techniques are needed to make the training of a Neural GPU work well, and some are required for the generalization to work or to be stable.
+
+- **Curriculum leaning**: Start training on small length, increase when learned.
+- **Parameter sharing relaxation**: 
+	- Allow to do different things in different time-steps first
+	- Not needed now with bigger models and orthogonal init
+- **Dropout on recurrent connections**
+	- Randomly set 10% of state vectors to 0 in each step
+	- Interestingly, this is key for good length generalization
+- **Noise added to gradients**: Add small gaussion noise to gradients in each training step
+- **Gate cutoff(saturation)**: Instead of sigmoid(x) use [1.2sigmoid(x) - 0.1]
+- **Tune parameters. Tune, tune, tune**: A lot of GPUs running for a few months; or: better methods.
+
+## How to code this 
+A few issues that come up
+
+Illustrate each one with code
+
+- **Is the graph static or dynamic?**
+	- Dynamic ops were not exposed in first TF release, **tricky**
+	- Static graph requires bucketing and takes long to build
+	- **Focus:** why conditionals are tricky: **batches and lambdas**
+
+- **How do we do bucketing?**
+	- Sparse or dense buckets? Masks are bug-prone
+	- How do we bucket training data? Feed or queues?
+	- If queues, how to do curriculum? How to not starve?
+
+- **How do we writer layers?**  
+	- Is there a canonical way to define new functions?
+	- Frameworks: Keras vs Slim (OO vs functional)
+	- Unification in tf.layers: callable objects sace scope
+	- **Example: weight-normalization through custom_getter**
+
+- **How do we organize experiments?**
+	- Use tf.learn, Estimator, Experiment
+	- How to registering models and problems? Save runs?
+	- Hyper-parameters manual or tuned with ranges? 
