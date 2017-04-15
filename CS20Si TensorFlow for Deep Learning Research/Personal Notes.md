@@ -922,3 +922,53 @@ output, out_state = tf.nn.dynamic_rnn(cell, seq, **length**, initial_state)
 - Seem to perform bette than both word-level and character-level models
 
 ---
+
+# Lecture 12 Convolutional GRU
+
+**Lessons Learned Building the Neural GPU**
+**What I learned building NNs to learn algorithm**
+
+## Gradient Descent
+
+**Gradient descent** is the standard way of training neural networks and many other forms of machine learning.
+
+But it is a very basic method that only finds local minima. It is counter-intuitive to apply it to combinatorial problems. But very high-dimensional spaces are often counter-intuitive and proper representations can make gradient descent applicable to combinatorial problem too.
+
+## Computing with Neural Networks
+
+Basic **feed-forward** neural networks operate on fixed-size vectors, so their power to generalize is limited.
+- fixed-size input
+- fixed-size output
+- number of parameters depends on these sizes
+- limited computational power
+
+**Recurrent neural networks** lift this major limitation, but their architecture restricts their power in other ways.
+- variable-size input
+- variable-size output
+- number of parameters depends on **memory size**
+- computational power limited by this memory size
+
+## Why learn Algorithms?
+Algorithms are universal patterns, so if we can learn them, then in principle we can learn everything. If we can't learn basic ones, then we can't hope to build universal machine intelligence.
+
+### Can't recurrent neural networks do it?
+- Only if testing length ~ training
+- But with higher length we need to increase network capacity(number of parameters)
+- Fail to capture algorithmic patterns, even in principle
+
+### The big dream of Universal Learning
+- Kolmogoroff complexity
+- Solomonoff induction
+- Universal AI
+
+### Precious work on neural algorithm learning
+- RNN and LSTM-based, generalizes a bit with attention
+- Data-structure based(stack RNNs, memory nets)
+- Neural Turing Machines
+
+### Problems with Neural Turing Machines
+- Look close, your computers does not have a tape
+- Very sequential in nature, hard to train on hard problems
+- Example problem: **long multiplication**
+
+## Nueral Computation
