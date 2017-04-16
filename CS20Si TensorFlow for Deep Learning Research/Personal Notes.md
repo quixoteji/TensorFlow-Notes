@@ -583,7 +583,7 @@ Given a **content image** and a **style image**, find a new image that:
 
 ## Autoencoder
 
-![Autoencoder](./1.png)
+![Autoencoder](./supplement/1.png)
 
 - Input and Output dimensions should match
 - Input and Output range should be same
@@ -715,9 +715,9 @@ Same for other queue
 ### Three ways to read in data
 1. Through tf.constant(make everything a constant)
 2. Feed dict: slow when client and workers are on different machines
-![Feed dict](./2.png)
+![Feed dict](./supplement/2.png)
 3. Data readers
-![Data readers](./3.png)
+![Data readers](./supplement/3.png)
 
 ### Different Readers for different file types
 - **tf.TextLineReader**: Outputs the lines of a file delimited by newlines
@@ -1055,4 +1055,72 @@ Illustrate each one with code
 - **How do we organize experiments?**
 	- Use tf.learn, Estimator, Experiment
 	- How to registering models and problems? Save runs?
-	- Hyper-parameters manual or tuned with ranges? 
+	- Hyper-parameters manual or tuned with ranges?
+
+# Lecture 13 Seq2seq with Attetion(A TensorFlow Chatbot)
+
+## Agenda
+- **Seq2Seq**
+- **Implementation Keys**
+- **Chatbot Craze**
+
+## Sequence to Sequence
+- The current model class of choice for most dialogue and machine translation system
+- **RNN Encoder-Decoder**: [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Learning](https://arxiv.org/pdf/1406.1078.pdf)
+
+### Structure
+**Consists of two recurrent neural networks(RNNs)**:
+- Encoder maps a variable-length source sequence(input) to a fixed-length vector
+- Decoder maps the vector representation back to a variable-length target sequence(output)
+- Two RNNs are trained jointly to maxmize the conditional probability of the targets sequence given a source sequence.
+
+#### Vanilla Encoder and Decoder
+![encoder-decoder](./supplement/4.png)
+
+#### Encoder and Decoder in TensorFlow
+- Each box in the picture represents a cell of the RNN, most commonly a **GRU** cell or a **LSTM** cell
+- Encoder and decoder often have different weights, but sometimes are the same
+![encoder-decoder2](./supplement/5.png)
+
+#### With Attention
+- In the vanilla model, each input has to be encoded into a fixed-size state vector, as that is the only thing passed to the decoder
+- Attention mechanism that gives decoder direct access to the input
+![attention](./supplement/6.png)
+
+#### **Bucketing**
+- Avoid too much padding that leads to extraneous computation
+- Group sequences of similar lengths into the same buckets
+- Create a separate subgraph for each bucket
+- In theory, can use for v1.0:
+>tf.contrib.training.bucket_by_sequence_length(max_length, examples, batch_size, bucket_boundaries, capacity=2*batch_size, dynamic_pad=True)
+- In practice, use bucketing algorithm used in TensorFlow's translate model(because we're using v0.12)
+
+#### **Sampled Softmax**
+- Avoid the growing complexity of computing the normalization constant
+- Approximate the negative term of the gradient, by importance sampling with a small number of samples
+- At each step, update only the vectors associated with the correct word w and with sampled words in V'
+- Once training is over, use the full target vocabulary to compute the output probability of each target word
+
+1. Generally an underestimate of the full softmax loss
+2. At inferrence time, conpute the full softmax using: tf.nn.softmax(tf.matmul(inputs, tf.transpose(weight))+bias)
+
+## Seq2seq in TensorFlow
+
+1. **Outputs, states = basic_rnn_seq2seq(encoder_inputs, decoder_inputs, cell)**
+	- **encoder_inputs**: a list of tensors representing inputs to the encoder
+	- **decoder_inputs**: a list of tensors representing inputs to decoder
+	- **cell**: single or multiple layer cells
+	- **outputs**: a list of decoder_size tensors, each of dimension 1xDECODE_VOCAB corresponding to the probability distribution at each time-step
+	- **states**: a list of decoder_size tensors, each corresponds to the internal state of the decoder at every time-step
+2. **outputs, states = embedding_rnn_seq2seq(encoder_inputs, decoder_inputs, cell, num_encoder_symbols, num_decoder_symbols, embedding_size, output_projection=None, feed_previouse=False)**
+	- To embed your inputs and outputs, need to specify the number of input and output tokes
+	- **Feed_previous** if you want to feed the previously predicted word to train, even if the model makes mistakes
+	- **Output_projection**: tuple of project weight and bias if use sampled softmax
+3. **outputs, states = embedding_attention_seq2seq(encoder_inputs, decoder_inputs, cell, num_encoder_symbols, num_decoder_symbols, num_heads=1, output_projection=False, initial_state_attention=False)**
+	- Embedding sequence-to-sequence model with attention
+4. ***Wrapper for seq2seq with buckets:*** **outputs, losses = model_with_buckets(encoder_inputs, decoder_inputs, targets, weights, buckets, seq2seq, softmax_loss_function=None, per_example_loss=False)**
+	- Seq2seq: one of the seq2seq functions defined above
+	- Softmax loss function: normal softmax or sampled softmax
+
+## Chatbot Example
+[Chameleons in Imagined Conversations](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html)
