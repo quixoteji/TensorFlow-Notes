@@ -1,4 +1,9 @@
 # How to transfer our data into Tensorflow TFRecord
+
+[TFRecord Video 0](https://www.youtube.com/watch?v=DuiGJuwNFV0&index=7&list=PLnUknG7KBFzqMSDZC1mnYMN0zMoRaH68r)
+[TFRecord Video 1](https://www.youtube.com/watch?v=F503abjanHA&list=PLnUknG7KBFzqMSDZC1mnYMN0zMoRaH68r&index=6)
+[TFRecord Video 2](https://www.youtube.com/watch?v=jbLi8JHgl28&list=PLnUknG7KBFzqMSDZC1mnYMN0zMoRaH68r&index=5)
+
 - **Transform into TFRecord**
 - **Read and decode**
 - **Generate batches**
